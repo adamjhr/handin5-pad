@@ -59,7 +59,7 @@ let rec eval (e : expr) (env : value env) : value =
       let bodyEnv = (f, Closure(f, x, fBody, env)) :: env
       eval letBody bodyEnv
     | Call(eFun, eArg) -> 
-      let fClosure = eval eFun env
+      let fClosure = eval eFun env  (* Different from Fun.fs - to enable first class functions *)
       match fClosure with
       | Closure (f, x, fBody, fDeclEnv) ->
         let xVal = eval eArg env
@@ -101,3 +101,35 @@ let ex4 =
                   Var "app"),
            Letfun("mul3", "y", Prim("*", CstI 3, Var "y"), 
                   Call(Var "tw", Var "mul3")));;
+
+(* let add1 x = x + 1 in add1 end *)
+(*open Absyn*)
+(*open HigherFun*)
+let add1 = Letfun("add1", "x",
+                  Prim("+", Var "x", CstI 1),
+                  Var "add1")
+let add1C = eval add1 []
+let add1with2 = eval (Call(Var "add1C", CstI 2)) [("add1C",add1C)]
+
+(* let tw g = let app y = g (g y) in app end in tw end *)
+let tw = 
+  Letfun("tw", "g", 
+    Letfun("app", "y", Call(Var "g", Call(Var "g", Var "y")), Var "app"),
+    Var "tw")
+let twC = eval tw []
+
+
+let twAdd1C = eval (Call(Var "tw", Var "add1")) [("tw",twC);("add1",add1C)]
+let res = eval (Call(Var "twAdd1C", CstI 1)) [("twAdd1C",twAdd1C)]
+
+(* We are not restricting environment to only contain free variables
+   when we build the closure for a function. This make the closure for
+   twAdd1C contain the variable tw. We can delete this from the
+   closure for twAdd1C and it still works. *)
+
+(* open HigherFun *)
+let twAdd1C2 =
+  Closure
+    ("app", "y", Call (Var "g", Call (Var "g", Var "y")),
+     [("g", Closure ("add1", "x", Prim ("+", Var "x", CstI 1), []))])
+let res2 = eval (Call(Var "twAdd1C2", CstI 1)) [("twAdd1C2",twAdd1C2)]

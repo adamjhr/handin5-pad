@@ -8,6 +8,10 @@ module TypeInference
 
 open Absyn
 
+(* Debugging *)
+let debugP = false
+let debug s = if debugP then printfn "DEBUG: %s" s else ()
+
 (* Environment operations *)
 
 type 'v env = (string * 'v) list
@@ -49,7 +53,6 @@ type typ =
      | TypB                                (* booleans                   *)
      | TypF of typ * typ                   (* (argumenttype, resulttype) *)
      | TypV of typevar                     (* type variable              *)
-     | TypL of typ
 
 and tyvarkind =  
      | NoLink of string                    (* uninstantiated type var.   *)
@@ -76,7 +79,7 @@ let setTvLevel tyvar newLevel =
 (* Normalize a type; make type variable point directly to the
    associated type (if any).  This is the `find' operation, with path
    compression, in the union-find algorithm. *)
-
+(* NHA
 let rec normType t0 = 
     match t0 with
     | TypV tyvar ->
@@ -85,12 +88,23 @@ let rec normType t0 =
                           setTvKind tyvar (LinkTo t2); t2
       | _ -> t0
     |  _ -> t0;
+*)
+(* Find operation without path compression. *)
+let rec normType t0 = 
+    match t0 with
+    | TypV tyvar ->
+      match !tyvar with 
+      | (LinkTo t1, _) -> let t2 = normType t1 
+                          (*let _ = setTvKind tyvar (LinkTo t2)*)
+                          t2
+      | _ -> t0
+    |  _ -> t0;
 
 let rec freeTypeVars t : typevar list = 
     match normType t with
     | TypI        -> []
     | TypB        -> []
-    | TypV tv     -> [tv]
+    | TypV tv     -> (*(printfn "%s" ("found free tyvar"));*) [tv]
     | TypF(t1,t2) -> union(freeTypeVars t1, freeTypeVars t2)
 
 let occurCheck tyvar tyvars =                     
@@ -120,12 +134,38 @@ let rec typeToString t : string =
     | TypB         -> "bool"
     | TypV _       -> failwith "typeToString impossible"
     | TypF(t1, t2) -> "function"
-            
+
+(* Pretty-print type, using names 'a, 'b, ... for type variables *)
+
+let rec showType t : string =
+    let rec pr t = 
+        match normType t with
+        | TypI         -> "int"
+        | TypB         -> "bool"
+        | TypV tyvar   -> 
+          match !tyvar with
+          | (NoLink name, _) -> name
+          | _                -> failwith "showType impossible"
+        | TypF(t1, t2) -> "(" + pr t1 + " -> " + pr t2 + ")"
+    pr t 
+
+let rec showTEnv tenv =
+  let showKind = function
+    NoLink s -> "NoLink("+s+")"
+  | LinkTo typ -> "LinkTo("+(showType typ)+")"
+  let showTyvar tv =
+    match !tv with
+      (kind,lvl) -> "("+(showKind kind)+","+(lvl.ToString())+")"
+  let showTypescheme = function
+    TypeScheme(tvs,typ) -> "V" + (List.foldBack (fun tv a -> (showTyvar tv) + "." + a) tvs "") + (showType typ)
+  List.foldBack (fun (v,ts) a -> v + "->" + (showTypescheme ts) + ";" + a) tenv ""
+      
 (* Unify two types, equating type variables with types as necessary *)
 
 let rec unify t1 t2 : unit =
     let t1' = normType t1
     let t2' = normType t2
+    let _ = debug ("Unify called with t1=" + (showType t1) + " and t2= " + (showType t2))
     match (t1', t2') with
     | (TypI, TypI) -> ()
     | (TypB, TypB) -> ()
@@ -158,8 +198,10 @@ let newTypeVar level : typevar =
    over those whose level is higher than the current level: *)
 
 let rec generalize level (t : typ) : typescheme =
+    let _ = debug ("generalize with level: " + level.ToString())
     let notfreeincontext tyvar = 
-        let (_, linkLevel) = !tyvar 
+        let (_, linkLevel) = !tyvar
+        let _ = debug ("  linklevel = " + linkLevel.ToString())
         linkLevel > level
     let tvs = List.filter notfreeincontext (freeTypeVars t)
     TypeScheme(unique tvs, t)  // The unique call seems unnecessary because freeTypeVars has no duplicates??
@@ -192,20 +234,6 @@ let specialize level (TypeScheme(tvs, t)) : typ =
     | _  -> let subst = List.map bindfresh tvs
             copyType subst t
 
-(* Pretty-print type, using names 'a, 'b, ... for type variables *)
-
-let rec showType t : string =
-    let rec pr t = 
-        match normType t with
-        | TypI         -> "int"
-        | TypB         -> "bool"
-        | TypV tyvar   -> 
-          match !tyvar with
-          | (NoLink name, _) -> name
-          | _                -> failwith "showType impossible"
-        | TypF(t1, t2) -> "(" + pr t1 + " -> " + pr t2 + ")"
-    pr t 
-
 (* A type environment maps a program variable name to a typescheme *)
 
 type tenv = typescheme env
@@ -218,8 +246,10 @@ let rec typ (lvl : int) (env : tenv) (e : expr) : typ =
     | CstI i -> TypI
     | CstB b -> TypB
     | Var x  -> specialize lvl (lookup env x)
-    | Prim(ope, e1, e2) -> 
+    | Prim(ope, e1, e2) ->
+      let _ = debug ("Type Prim on e1: " + (showTEnv env))      
       let t1 = typ lvl env e1
+      let _ = debug ("Type Prim on e2: " + (showTEnv env))      
       let t2 = typ lvl env e2
       match ope with
       | "*" -> (unify TypI t1; unify TypI t2; TypI)
@@ -248,9 +278,11 @@ let rec typ (lvl : int) (env : tenv) (e : expr) : typ =
                       :: (f, TypeScheme([], fTyp)) :: env
       let rTyp = typ lvl1 fBodyEnv fBody
       let _    = unify fTyp (TypF(xTyp, rTyp))
-      let bodyEnv = (f, generalize lvl fTyp) :: env 
+      let bodyEnv = (f, generalize lvl fTyp) :: env
+      let _ = debug ("Letfun letBodyEnv: " + (showTEnv bodyEnv))
       typ lvl bodyEnv letBody
-    | Call(eFun, eArg) -> 
+    | Call(eFun, eArg) ->
+      let _ = debug ("Type Call: " + (showTEnv env))
       let tf = typ lvl env eFun 
       let tx = typ lvl env eArg
       let tr = TypV(newTypeVar lvl)
@@ -264,3 +296,4 @@ let rec tyinf e0 = typ 0 [] e0
 let inferType e = 
     (tyvarno := 0;
      showType (tyinf e));;
+
