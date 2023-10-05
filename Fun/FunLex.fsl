@@ -44,7 +44,7 @@ rule Token = parse
                       commentDepth := 1; 
                       SkipComment lexbuf; Token lexbuf }
   | '='             { EQ }
-  | "->"            { AF } //<New>
+  | "->"            { AF }          //<New>
   | "<>"            { NE }
   | '>'             { GT }
   | '<'             { LT }

@@ -24,7 +24,7 @@ type token =
   | LT
   | GE
   | LE
-  | AF                  //<NEW>
+  | AF
   | PLUS
   | MINUS
   | TIMES
@@ -35,7 +35,7 @@ type token =
   | FALSE
   | IF
   | IN
-  | FUN                 //<NEW>
+  | FUN
   | LET
   | NOT
   | THEN

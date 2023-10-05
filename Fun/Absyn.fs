@@ -10,5 +10,5 @@ type expr =
   | Prim of string * expr * expr
   | If of expr * expr * expr
   | Letfun of string * string * expr * expr    (* (f, x, fBody, letBody) *)
-  | Fun of string * expr //<NEW>
+  | Fun of string * expr                       //<NEW>
   | Call of expr * expr

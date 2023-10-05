@@ -10,7 +10,7 @@ type token =
   | LT
   | GE
   | LE
-  | AF              //<NEW>
+  | AF
   | PLUS
   | MINUS
   | TIMES
