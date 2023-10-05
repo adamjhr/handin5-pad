@@ -11,17 +11,17 @@
 %token <string> NAME
 %token <bool> CSTBOOL
 
-%token ELSE END FALSE IF IN LET NOT THEN TRUE
+%token ELSE END FALSE IF IN FUN LET NOT THEN TRUE //<NEW>
 %token PLUS MINUS TIMES DIV MOD
-%token EQ NE GT LT GE LE
+%token EQ NE GT LT GE LE AF                       //<NEW>
 %token LPAR RPAR 
 %token EOF
 
 %left ELSE              /* lowest precedence  */
-%left EQ NE 
+%left EQ NE AF                                    //<NEW>
 %left GT LT GE LE
 %left PLUS MINUS
-%left TIMES DIV MOD 
+%left TIMES DIV MOD
 %nonassoc NOT           /* highest precedence  */
 
 %start Main
@@ -37,6 +37,7 @@ Main:
 Expr:
     AtExpr                              { $1                     }
   | AppExpr                             { $1                     }
+  | FUN NAME AF Expr                    { Fun($2, $4)            } //<NEW>
   | IF Expr THEN Expr ELSE Expr         { If($2, $4, $6)         }
   | MINUS Expr                          { Prim("-", CstI 0, $2)  }
   | Expr PLUS  Expr                     { Prim("+",  $1, $3)     }
