@@ -239,4 +239,32 @@ val it: Absyn.expr =
 val it: HigherFun.value = Int 7
 ```
 
+## Exercise 6.4
+
+
+
+## Exercise 6.5
+
+`dotnet fsi -r FsLexYacc.Runtime.dll Absyn.fs FunPar.fs FunLex.fs Parse.fs TypeInference.fs ParseAndType.fs`
+
+```fsharp
+> open ParseAndType.fs;;
+> inferType (fromString "let f x = 1 in f f end");;
+val it: string = "int"
+
+> inferType (fromString "let f g = g g in f end");;
+System.Exception: type error: circularity ...
+
+> inferType (fromString "let f x = let g y = y in g false end in f 42 end");;
+val it: string = "bool"
+
+> inferType (fromString "let f x = let g y = if true then y else x in g false end in f 42 end");;
+System.Exception: type error: bool and int ...
+
+> inferType (fromString "let f x = let g y = if true then y else x in g false end in f true end");;
+val it: string = "bool"
+```
+
+Type inference fails for the following programs:
+- `let f g = g g in f end`, here the error 'circularity' occurs. This is since...
 
