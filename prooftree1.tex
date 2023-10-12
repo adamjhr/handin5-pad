@@ -10,12 +10,12 @@
 \UnaryInfC{$[x \mapsto t_{x}, f \mapsto t_{x} \rightarrow int ]  \vdash$ 1 : int}
 \AxiomC{$\rho_{1}(f) = \forall \alpha, \alpha \rightarrow$ int}
 \RightLabel{\scriptsize $(p3)$}
-\UnaryInfC{$\rho_{1} \vdash$ f : $\alpha ? \rightarrow int$}
+\UnaryInfC{$\rho_{1} \vdash$ f : $\alpha \rightarrow int$}
 \AxiomC{$\rho_{1}(f) = \forall \alpha, \alpha \rightarrow$ int}
 \RightLabel{\scriptsize $(p3)$}
-\UnaryInfC{$\rho_{1} \vdash$ f : $????$}
+\UnaryInfC{$\rho_{1} \vdash$ f : $\alpha$}
 \RightLabel{\scriptsize $(p9)$}
-\BinaryInfC{$\rho_{1} [f \mapsto \forall \alpha, t_x \rightarrow int ]  \vdash$ f f : int}
+\BinaryInfC{$\rho_{1} [f \mapsto \forall \alpha, \alpha \rightarrow int ]  \vdash$ f f : int}
 \RightLabel{\scriptsize $(p8)$}
 \BinaryInfC{$[] \vdash$ let f x = 1 in f f end : int}
 \end{prooftree}

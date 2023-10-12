@@ -7,53 +7,53 @@
 
 \begin{prooftree}
 
-\AxiomC{A}																																% Level 1
-\AxiomC{$\rho_{1}(f) = \forall \alpha, \alpha \rightarrow$ int}																						% Level 2
+\AxiomC{-------- A --------}																																% Level 1
+\AxiomC{$\rho_{2}(f) = \forall \alpha, $ int $ \rightarrow$ int}																						% Level 2
 \RightLabel{\scriptsize $(p3)$}																													% --------
-\UnaryInfC{$\rho_{1} \vdash$ f : $\alpha ? \rightarrow int$} 																					% Level 2
+\UnaryInfC{$\rho_{2} \vdash$ f : int $\rightarrow$ int} 																					% Level 2
 \AxiomC{} 																																			% Level 3
 \RightLabel{\scriptsize $(p1)$}																													% --------
-\UnaryInfC{$\rho_{1} \vdash$ 20 : int}   																										% Level 2
+\UnaryInfC{$\rho_{2} \vdash$ 20 : int}   																										% Level 2
 \RightLabel{\scriptsize $(p9)$}																												% --------
-\BinaryInfC{$\rho_{1} [f \mapsto \forall \alpha, t_x \rightarrow int ]  \vdash$ f 20 : int} 													% Level 1
+\BinaryInfC{$\rho_{2} [f \mapsto \forall \alpha, $ int$ \rightarrow $int$ ]  \vdash$ f 20 : int} 													% Level 1
 \RightLabel{\scriptsize $(p8)$}																											% --------
-\BinaryInfC{$[] \vdash$ let f x = if x $\textless$ 10 then 42 else f(x+1) in f 20 end : } 													% Bottom
+\BinaryInfC{$[] \vdash$ let f x = if x $\textless$ 10 then 42 else f(x+1) in f 20 end : int } 													% Bottom
 \end{prooftree}
 
 
 A:
 \begin{prooftree}
-\AxiomC{???}																																			% Level 4
-\RightLabel{\scriptsize $(p???)$}																													% --------
-\UnaryInfC{$\rho \vdash$ x : int} 																													% Level 3
+\AxiomC{$\rho_{1}(x) = \forall .$ int}																																			% Level 4
+\RightLabel{\scriptsize $(p3)$}																													% --------
+\UnaryInfC{$\rho_{1} \vdash$ x : int} 																													% Level 3
 \AxiomC{} 																																				% Level 4
 \RightLabel{\scriptsize $(p1)$}																														% --------
-\UnaryInfC{$\rho \vdash$ 10 : int}																													% Level 3
+\UnaryInfC{$\rho_{1} \vdash$ 10 : int}																													% Level 3
 \RightLabel{\scriptsize $(p5)$}																													% --------
-\BinaryInfC{$\rho \vdash$ x	 $\textless$ 10 : bool} 																							% Level 2
+\BinaryInfC{$\rho_{1} \vdash$ x	 $\textless$ 10 : bool} 																							% Level 2
 \AxiomC{} 																																			% Level 3
 \RightLabel{\scriptsize $(p1)$}																													% --------
-\UnaryInfC{$\rho \vdash$ 42 : int} 																												% Level 2
-\AxiomC{B}																																	% Level 2
+\UnaryInfC{$\rho_{1} \vdash$ 42 : int} 																												% Level 2
+\AxiomC{-------- B--------}																																	% Level 2
 \RightLabel{\scriptsize $(p7)$}																												% --------
-\TrinaryInfC{$[x \mapsto t_{x}, f \mapsto t_{x} \rightarrow int ]  \vdash$ if x $\textless$ 10 then 42 else f(x+1) : } 						% Level 1
+\TrinaryInfC{$\rho_{1}[x \mapsto $ int$, f \mapsto $ int $ \rightarrow $ int$ ]  \vdash$ if x $\textless$ 10 then 42 else f(x+1) : int } 						% Level 1
 \end{prooftree}
 
 B:
 \begin{prooftree}
-\AxiomC{$\rho(x) = \forall \alpha, \alpha \rightarrow$ int}																								% Level 4
+\AxiomC{$\rho_{1}(f) = \forall \alpha, $ int $\rightarrow$ int}																								% Level 4
 \RightLabel{\scriptsize $(p3)$}																														% --------
-\UnaryInfC{$\rho \vdash$ f : }																														% Level 3
-\AxiomC{$\rho(x) = \forall . int $}																															% Level 5
+\UnaryInfC{$\rho_{1} \vdash$ f : int $\rightarrow$ int}																														% Level 3
+\AxiomC{$\rho_{1}(x) = \forall . int $}																															% Level 5
 \RightLabel{\scriptsize $(p3)$}																															% --------
-\UnaryInfC{$\rho \vdash$ x : int } 																														% Level 4	
+\UnaryInfC{$\rho_{1} \vdash$ x : int } 																														% Level 4	
 \AxiomC{}																																					% Level 5
 \RightLabel{\scriptsize $(p1)$}																															% --------
-\UnaryInfC{$\rho \vdash$ 1 : int } 																														% Level 4
+\UnaryInfC{$\rho_{1} \vdash$ 1 : int } 																														% Level 4
 \RightLabel{\scriptsize $(p4)$}																														% --------
-\BinaryInfC{$\rho \vdash$ x+1 : int } 																												% Level 3
+\BinaryInfC{$\rho_{1} \vdash$ x+1 : int } 																												% Level 3
 \RightLabel{\scriptsize $(p9)$}																													% --------
-\BinaryInfC{$\rho \vdash$ f(x+1) : int } 																										% Level 2
+\BinaryInfC{$\rho_{1} \vdash$ f(x+1) : int } 																										% Level 2
 \end{prooftree}
 
 \end{document}

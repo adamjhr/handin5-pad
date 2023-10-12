@@ -1,7 +1,7 @@
 
+# Excercises
+
 ## Exercise 5.1
-
-
 
 The fsharp solution can be found in `exercise5_1.fs`
 
@@ -43,13 +43,32 @@ static int[] merge (int[] xs, int[] ys) {
 
 ## Exercise 5.7
 
-????????
+`TypedFun.fs`
+
+```fsharp
+type typ =
+  | TypI                                (* int                         *)
+  | TypB                                (* bool                        *)
+  | TypL of typ                         // NEW
+  | TypF of typ * typ                   (* (argumenttype, resulttype)  *)
+
+  ...
+
+let rec typ (e : tyexpr) (env : typ env) : typ =
+  match e with
+  | CstI i -> TypI
+  | CstB b -> TypB
+  | CstL l -> TypL TypI         //<NEW>
+  | Var x  -> lookup env x 
+  ...
+```
 
 ## Exercise 6.1
 
 `dotnet fsi -r FsLexYacc.Runtime.dll Absyn.fs FunPar.fs FunLex.fs Parse.fs HigherFun.fs ParseAndRunHigher.fs`
 
 Input and output from F# interactive
+
 ```fsharp
 > open ParseAndRunHigher;;
 > fromString "let add x = let f y = x+y in f end in add 2 5 end";;
@@ -107,6 +126,7 @@ The 4th program returns a closure for the function add, where the variable x is 
 These were the changes we made:
 
 `Absyn.fs`
+
 ```fsharp
 type expr =
   | CstI of int
@@ -121,6 +141,7 @@ type expr =
 ```
 
 `HigherFun.fs`
+
 ```fsharp
 ...
 
@@ -133,8 +154,8 @@ type value =
 
 let rec eval (e : expr) (env : value env) : value =
     match e with
-	...
-	| Fun(x, fbody) ->                        // <New>
+...
+| Fun(x, fbody) ->                        // <New>
       Clos(x, fbody, env)                     // <New>
     | Call(eFun, eArg) ->
       let fClosure = eval eFun env  (* Different from Fun.fs - to enable first class functions *)
@@ -151,6 +172,7 @@ let rec eval (e : expr) (env : value env) : value =
 ```
 
 Input and output from F# interactive
+
 ```fsharp
 > open Absyn;;
 > open HigherFun;;
@@ -173,6 +195,7 @@ Giving the two examples of abstract syntax in the exercise, produces the expecte
 ## Exercise 6.3
 
 `FunLex.fsl`
+
 ```text
 let keyword s =
     match s with
@@ -187,6 +210,7 @@ rule Token = parse
 ```
 
 ``FunPar.fsy`
+
 ```text
 ...
 
@@ -218,6 +242,7 @@ We run the following commands, they produce no errors:
 `fslex --unicode FunLex.fsl`
 
 Input and output from F# interactive
+
 ```fsharp
 > open ParseAndRunHigher;;
 > fromString "let add x = fun y -> x+y in add 2 5 end";;
@@ -241,12 +266,28 @@ val it: HigherFun.value = Int 7
 
 ## Exercise 6.4
 
+(i)
+This is polymorphic since the parameter x is never used, thus the type of the given argument does not matter. Type: a -> int
+![Type inference 1](image1.png)
 
+(ii)
+This is not polymorphic since the parameter x can only have the type int, for the type inference to succeed.
+This type rule tree had to be divided into several parts. See parts A and B below.
+![Type inference 2](image2.png)
+
+
+**A:**
+![Type inference 2 A](image2a.png)
+
+**B:**
+![Type inference 2 B](image2b.png)
 
 ## Exercise 6.5
 
 `dotnet fsi -r FsLexYacc.Runtime.dll Absyn.fs FunPar.fs FunLex.fs Parse.fs TypeInference.fs ParseAndType.fs`
 
+(i)
+Below is shown the execution in f#-interactive.
 ```fsharp
 > open ParseAndType.fs;;
 > inferType (fromString "let f x = 1 in f f end");;
@@ -266,5 +307,53 @@ val it: string = "bool"
 ```
 
 Type inference fails for the following programs:
-- `let f g = g g in f end`, here the error 'circularity' occurs. This is since...
+- `let f g = g g in f end`, here the error 'circularity' occurs. Take the following example:
+```
+let f g = g g
 
+f (a -> b)
+
+g = (b -> c)
+
+g = (b -> (b -> c))
+
+g = (b -> (b -> (b -> c)))
+```
+   g must accept itself, thus resulting in a recursive type definition... This is not right.The type checker cannot know the final type since there is no final type.
+-  `let f x = let g y = if true then y else x in g false end in f 42 end`, which results in a 'bool and int' error.This is since the function g can both return an int and a bool depending on which branch of the if-statement is entered. If the type wasn't checked statically, then there wouldn't be a problem, since the function g could only return a bool.
+
+(ii)
+**(bool -> bool):**
+`let f x = if x then true else false in f end`
+
+**(int -> int):**
+`let f x = x + 1 in f end`
+
+**(int -> int -> int):**
+`let f x = let g y = y + x in g end in f end`
+
+**('a -> 'b -> 'a):**
+`let f x = let g y = x in g end in f end`
+
+**('a -> 'b -> 'b):**
+`let f x = let g y = y in g end in f end`
+
+We were unable to construct programs for the final 3 types.
+
+Here is the execution in f#-interactive
+```f#
+> inferType (fromString "let f x = if x then true else false in f end");;
+val it: string = "(bool -> bool)"
+
+> inferType (fromString "let f x = x + 1 in f end");;
+val it: string = "(int -> int)"
+
+> inferType (fromString "let f x = let g y = y + x in g end in f end");;
+val it: string = "(int -> (int -> int))"
+
+> inferType (fromString "let f x = let g y = x in g end in f end");;
+val it: string = "('h -> ('g -> 'h))"
+
+> inferType (fromString "let f x = let g y = y in g end in f end");;
+val it: string = "('g -> ('h -> 'h))"
+```
