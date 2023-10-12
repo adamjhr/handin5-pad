@@ -1,7 +1,7 @@
 
+# Excercises
+
 ## Exercise 5.1
-
-
 
 The fsharp solution can be found in `exercise5_1.fs`
 
@@ -43,13 +43,32 @@ static int[] merge (int[] xs, int[] ys) {
 
 ## Exercise 5.7
 
-????????
+`TypedFun.fs`
+
+```fsharp
+type typ =
+  | TypI                                (* int                         *)
+  | TypB                                (* bool                        *)
+  | TypL of typ                         // NEW
+  | TypF of typ * typ                   (* (argumenttype, resulttype)  *)
+
+  ...
+
+let rec typ (e : tyexpr) (env : typ env) : typ =
+  match e with
+  | CstI i -> TypI
+  | CstB b -> TypB
+  | CstL l -> TypL TypI         //<NEW>
+  | Var x  -> lookup env x 
+  ...
+```
 
 ## Exercise 6.1
 
 `dotnet fsi -r FsLexYacc.Runtime.dll Absyn.fs FunPar.fs FunLex.fs Parse.fs HigherFun.fs ParseAndRunHigher.fs`
 
 Input and output from F# interactive
+
 ```fsharp
 > open ParseAndRunHigher;;
 > fromString "let add x = let f y = x+y in f end in add 2 5 end";;
@@ -107,6 +126,7 @@ The 4th program returns a closure for the function add, where the variable x is 
 These were the changes we made:
 
 `Absyn.fs`
+
 ```fsharp
 type expr =
   | CstI of int
@@ -121,6 +141,7 @@ type expr =
 ```
 
 `HigherFun.fs`
+
 ```fsharp
 ...
 
@@ -133,8 +154,8 @@ type value =
 
 let rec eval (e : expr) (env : value env) : value =
     match e with
-	...
-	| Fun(x, fbody) ->                        // <New>
+...
+| Fun(x, fbody) ->                        // <New>
       Clos(x, fbody, env)                     // <New>
     | Call(eFun, eArg) ->
       let fClosure = eval eFun env  (* Different from Fun.fs - to enable first class functions *)
@@ -151,6 +172,7 @@ let rec eval (e : expr) (env : value env) : value =
 ```
 
 Input and output from F# interactive
+
 ```fsharp
 > open Absyn;;
 > open HigherFun;;
@@ -173,6 +195,7 @@ Giving the two examples of abstract syntax in the exercise, produces the expecte
 ## Exercise 6.3
 
 `FunLex.fsl`
+
 ```text
 let keyword s =
     match s with
@@ -187,6 +210,7 @@ rule Token = parse
 ```
 
 ``FunPar.fsy`
+
 ```text
 ...
 
@@ -218,6 +242,7 @@ We run the following commands, they produce no errors:
 `fslex --unicode FunLex.fsl`
 
 Input and output from F# interactive
+
 ```fsharp
 > open ParseAndRunHigher;;
 > fromString "let add x = fun y -> x+y in add 2 5 end";;
@@ -238,5 +263,3 @@ val it: Absyn.expr =
 > run it;;
 val it: HigherFun.value = Int 7
 ```
-
-

@@ -103,7 +103,7 @@ let rec typ (e : tyexpr) (env : typ env) : typ =
     match e with
     | CstI i -> TypI
     | CstB b -> TypB
-    | CstL l -> TypL TypI
+    | CstL l -> TypL TypI         //<NEW>
     | Var x  -> lookup env x 
     | Prim(ope, e1, e2) -> 
       let t1 = typ e1 env
